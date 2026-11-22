@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#171d2a">
+  <meta name="description" content="NOVA — персональный собеседник для изучения английского">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <title>NOVA — English companion</title>
+  <style>
+    :root{color-scheme:light;--ink:#171d2a;--panel:#222c3e;--accent:#a78bfa;--bg:#f3f5f9;--muted:#758096;--line:#e5e8ef}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#20283a}
+    .app{max-width:720px;margin:0 auto;min-height:100dvh;background:white;display:flex;flex-direction:column;box-shadow:0 0 40px #17203310}
+    header{background:var(--ink);color:white;padding:18px 16px 14px;padding-top:max(18px,env(safe-area-inset-top))}
+    .brand{display:flex;align-items:center;gap:12px}.logo{width:44px;height:44px;border-radius:14px;background:var(--accent);color:var(--ink);display:grid;place-items:center;font-size:27px;font-weight:900}
+    h1{font-size:21px;letter-spacing:1px;margin:0}.sub{font-size:11px;color:#b8c0d0;letter-spacing:1px;margin-top:3px}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}.stat{background:#252e40;border-radius:12px;padding:9px 10px}.stat small{display:block;color:#b8c0d0;font-size:11px}.stat strong{display:block;color:white;font-size:20px;margin-top:3px}
+    nav{display:flex;gap:6px;padding:9px;background:#f0f1f5}.tab{border:0;background:transparent;border-radius:10px;padding:11px 8px;flex:1;font-size:14px;color:#596276}.tab.active{background:white;color:#171d2a;font-weight:700;box-shadow:0 1px 4px #0000000c}
+    main{flex:1;padding:16px;display:flex;flex-direction:column;gap:14px}.view{display:none}.view.active{display:flex;flex-direction:column;gap:14px}
+    .eyebrow{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.8px}.messages{display:flex;flex-direction:column;gap:12px}
+    .bubble{max-width:91%;border-radius:17px;padding:13px 14px;line-height:1.48;white-space:pre-wrap;overflow-wrap:anywhere}.bubble.nova{background:#f0f2f7;align-self:flex-start}.bubble.user{background:#293b59;color:white;align-self:flex-end}
+    .who{font-size:10px;font-weight:800;letter-spacing:.7px;color:#778198;margin-bottom:6px}.user .who{color:#d7dfed}
+    .phrase{border-top:1px solid #dce0e9;margin-top:10px;padding-top:9px}.phrase strong{display:block;font-size:15px}.phrase small{display:block;color:#6f788c;margin-top:3px}
+    .composer{display:flex;gap:8px;position:sticky;bottom:0;background:white;padding:8px 0 max(8px,env(safe-area-inset-bottom))}
+    input,select{font:inherit} #message{min-width:0;flex:1;border:1px solid #dfe3eb;border-radius:13px;padding:13px 14px;outline:none}#message:focus{border-color:#a78bfa}
+    button{cursor:pointer}.send{border:0;background:#171d2a;color:white;border-radius:13px;padding:0 17px;font-size:18px}
+    .quick{display:flex;flex-wrap:wrap;gap:7px}.quick button,.secondary{border:1px solid #dfe3eb;background:white;color:#384256;border-radius:999px;padding:8px 11px;font-size:12px}
+    .card{background:#f1f3f7;border-radius:16px;padding:15px}.card h2{font-size:16px;margin:0 0 8px}.muted{color:var(--muted);font-size:13px;line-height:1.5}
+    .word{padding:13px 0;border-bottom:1px solid var(--line)}.word:last-child{border:0}.word strong{display:block}.word small{color:var(--muted)}
+    .option{display:flex;align-items:center;gap:10px;padding:11px;border:1px solid var(--line);border-radius:11px;margin:7px 0;font-size:14px}
+    .primary{border:0;background:#171d2a;color:white;border-radius:12px;padding:12px 15px;font-weight:650;width:100%}
+    .result{padding:12px;border-radius:12px;background:white;margin-top:10px;font-size:14px}
+    footer{padding:4px 16px 16px;color:#8790a2;font-size:10px;text-align:center}
+    @media(min-width:600px){body{padding:20px 0}.app{min-height:calc(100dvh - 40px);border-radius:22px;overflow:hidden}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand"><div class="logo">N</div><div><h1>NOVA</h1><div class="sub">PERSONAL ENGLISH COMPANION</div></div></div>
+    <div class="stats">
+      <div class="stat"><small>Сообщений</small><strong id="statMessages">0</strong></div>
+      <div class="stat"><small>Фраз в памяти</small><strong id="statWords">0</strong></div>
+      <div class="stat"><small>Уровень</small><strong id="statLevel">A1–A2</strong></div>
+    </div>
+  </header>
+  <nav>
+    <button class="tab active" data-tab="chat">Чат</button>
+    <button class="tab" data-tab="memory">Память</button>
+    <button class="tab" data-tab="practice">Практика</button>
+  </nav>
+  <main>
+    <section class="view active" id="chat">
+      <div class="eyebrow">ТЕКУЩИЙ ДИАЛОГ</div>
+      <div class="messages" id="messages"></div>
+      <div class="eyebrow">БЫСТРЫЕ СООБЩЕНИЯ</div>
+      <div class="quick">
+        <button data-send="I am agree with you">Проверить ошибку</button>
+        <button data-send="Hello, NOVA">Поздороваться</button>
+        <button data-send="Were you ever accidentally dropped as a child?">Разобрать фразу</button>
+      </div>
+      <div class="composer">
+        <input id="message" autocomplete="off" placeholder="Напиши NOVA..." aria-label="Сообщение">
+        <button class="send" id="send" aria-label="Отправить">➤</button>
+      </div>
+    </section>
+    <section class="view" id="memory">
+      <h2>Лексическая память</h2>
+      <p class="muted">Фразы, которые NOVA добавила в ходе диалога на этом устройстве.</p>
+      <div class="card" id="wordList"></div>
+      <div class="card">
+        <h2>Профиль обучения</h2>
+        <p class="muted">Выбери примерный уровень. Это стартовая настройка, не результат теста.</p>
+        <select id="level" style="width:100%;padding:12px;border:1px solid #dfe3eb;border-radius:10px">
+          <option value="A1–A2">Начальный — A1–A2</option><option value="B1–B2">Средний — B1–B2</option><option value="C1–C2">Продвинутый — C1–C2</option>
+        </select>
+      </div>
+      <button class="secondary" id="export">Экспортировать память в JSON</button>
+    </section>
+    <section class="view" id="practice">
+      <h2>Проверка памяти</h2>
+      <p class="muted">Проверь, можешь ли ты вспомнить значение без подсказки.</p>
+      <div class="card">
+        <div class="eyebrow">СЛОВО</div><h2 style="font-size:27px;margin-top:8px">Accidentally</h2>
+        <p class="muted">Как переводится это слово?</p>
+        <label class="option"><input type="radio" name="answer" value="Случайно"> Случайно</label>
+        <label class="option"><input type="radio" name="answer" value="Осторожно"> Осторожно</label>
+        <label class="option"><input type="radio" name="answer" value="Намеренно"> Намеренно</label>
+        <label class="option"><input type="radio" name="answer" value="Внезапно"> Внезапно</label>
+        <button class="primary" id="check">Проверить ответ</button><div id="result"></div>
+      </div>
+    </section>
+  </main>
+  <footer>Локальная версия NOVA 0.1 · Данные хранятся в этом браузере · ИИ пока не подключён</footer>
+</div>
+<script>
+const KEY='nova_v01_state';
+const initial={messages:[{role:'nova',text:'Ну наконец-то. Я NOVA. Здесь мы будем учить английский через общение, а не через унылые списки слов. Пиши. Ошибёшься — разберём. Будешь лениться — услышу от тебя оправдания, которые уже слышала тысячу раз.'}],words:[],level:'A1–A2'};
+let state;
+try{state=JSON.parse(localStorage.getItem(KEY))||initial}catch(e){state=initial}
+function save(){localStorage.setItem(KEY,JSON.stringify(state));render()}
+function add(role,text,phrase='',translation=''){state.messages.push({role,text,phrase,translation});if(phrase&&!state.words.some(w=>w.phrase===phrase)){state.words.push({phrase,translation,stage:'Знакомство',added:new Date().toISOString()})}save()}
+function response(s){
+ const x=s.toLowerCase();
+ if(x.includes('i am agree'))return {text:'Блядь, зачем ты притащил сюда am? Глагол agree самодостаточный. Правильно: I agree with you. Запомни конструкцию agree with someone. Теперь попробуй сказать: «Я не согласен с тобой».',phrase:'I agree with you',translation:'Я согласен с тобой'};
+ if(x.includes("i don't agree")||x.includes('i do not agree'))return {text:"Вот, уже лучше. I don't agree with you — правильно. После don't идёт начальная форма глагола. Теперь попробуй использовать agree в другом предложении.",phrase:"I don't agree with you",translation:'Я не согласен с тобой'};
+ if(x.includes('were you ever'))return {text:'О, ты добрался до нашей любимой фразы. Were you ever accidentally dropped as a child? — «Тебя в детстве случайно не роняли?» Здесь Were you ever…? задаёт вопрос о прошлом опыте. А теперь объясни своими словами, что означает accidentally.',phrase:'accidentally',translation:'случайно'};
+ if(x.includes('hello')||x.startsWith('hi'))return {text:'О, английский жив. Уже неплохо. А теперь не ограничивайся одним hello. Напиши: «Я сегодня немного устал, но хочу учиться» — самостоятельно, без переводчика.',phrase:'I’m a little tired today',translation:'Я сегодня немного устал'};
+ if(x.includes('i want')||x.includes('i like')||x.includes('i have'))return {text:'Неплохо. Теперь задача сложнее: расширь предложение. Добавь причину с because. Не пиши односложный ответ и не пытайся сбежать от практики.',phrase:'because',translation:'потому что'};
+ return {text:'Сообщение принято. Сейчас я работаю в локальном демонстрационном режиме и не подключена к языковой модели, поэтому не буду притворяться, что понимаю всё как настоящий ИИ. Попробуй написать: I agree with you или I don’t agree with you.'};
+}
+function send(s){s=(s??document.getElementById('message').value).trim();if(!s)return;add('user',s);const r=response(s);add('nova',r.text,r.phrase||'',r.translation||'');document.getElementById('message').value=''}
+function render(){
+ const box=document.getElementById('messages');box.innerHTML='';
+ state.messages.forEach(m=>{const d=document.createElement('div');d.className='bubble '+m.role;const who=document.createElement('div');who.className='who';who.textContent=m.role==='user'?'ТЫ':'NOVA';d.append(who,document.createTextNode(m.text));if(m.phrase){const p=document.createElement('div');p.className='phrase';const b=document.createElement('strong');b.textContent=m.phrase;const sm=document.createElement('small');sm.textContent=m.translation;p.append(b,sm);d.append(p)}box.append(d)});
+ box.scrollTop=box.scrollHeight;
+ document.getElementById('statMessages').textContent=state.messages.filter(m=>m.role==='user').length;
+ document.getElementById('statWords').textContent=state.words.length;
+ document.getElementById('statLevel').textContent=state.level;
+ const wl=document.getElementById('wordList');wl.innerHTML='';
+ if(!state.words.length)wl.textContent='Пока пусто. Напиши NOVA английскую фразу в чате.';
+ state.words.forEach(w=>{const d=document.createElement('div');d.className='word';const b=document.createElement('strong');b.textContent=w.phrase;const sm=document.createElement('small');sm.textContent=w.translation+' · '+w.stage;d.append(b,sm);wl.append(d)});
+ document.getElementById('level').value=state.level;
+}
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.tab,.view').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active')}));
+document.getElementById('send').addEventListener('click',()=>send());
+document.getElementById('message').addEventListener('keydown',e=>{if(e.key==='Enter')send()});
+document.querySelectorAll('[data-send]').forEach(b=>b.addEventListener('click',()=>send(b.dataset.send)));
+document.getElementById('level').addEventListener('change',e=>{state.level=e.target.value;save()});
+document.getElementById('check').addEventListener('click',()=>{const a=document.querySelector('input[name="answer"]:checked');const r=document.getElementById('result');if(!a){r.textContent='Сначала выбери ответ.';return}r.className='result';r.textContent=a.value==='Случайно'?'Правильно. Но узнать перевод — ещё не значит уметь использовать слово.':'Неправильно. Правильный ответ: случайно. Попробуй ещё раз позже.'});
+document.getElementById('export').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='nova-memory.json';a.click();URL.revokeObjectURL(url)});
+render();
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+</script>
+</body></html>
